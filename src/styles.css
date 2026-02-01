@@ -1,0 +1,123 @@
+:root {
+    line-height: 1.5;
+    --icon-color: #0059FF;
+    --success-color: #22C55E;
+    --bg-color:#F8FAFC;
+    --gradient-1: rgba(0, 0, 0, 0.1);
+    --gradient-2:  rgba(0, 0, 0, 0.3);
+  }
+  
+  h1, h2, h3, h4, h5, figure, p, ol, ul {
+    margin: 0;
+  }
+  
+  ol[role="list"], ul[role="list"] {
+    list-style: none;
+    padding-inline: 0;
+  }
+  
+  h1, h2, h3, h4, h5 {
+    font-size: inherit;
+    font-weight: inherit;
+  }
+  
+  img {
+    display: block;
+    max-inline-size: 100%;
+  }
+  
+  html, body {
+    height: 100%;
+    width: 100%;
+    background-color: var(--bg-color);
+}
+
+/* Header */
+header {
+    display: flex;
+    padding: 20px 50px;
+    position: fixed;
+    z-index: 999;
+    width: 100%;
+    background-color: #fff;
+    top: 0;
+    left: 0;
+}
+
+/* Toggle Buttons */
+.toggle-temp {
+    display: flex;
+    gap: 0px;
+}
+
+.temp-btn {
+    cursor: pointer;
+    padding: 4px 13px;
+    background-color: var(--bg-color);
+    font-size: 1.2rem;
+    font-weight: 550;
+    border-radius: 8px;
+}
+
+.temp-btn.active {
+    color: #fff;
+    background-color: var(--icon-color);
+}
+
+.right-panel {
+    display: flex;
+    gap: 20px;
+    margin-left: auto;
+    align-items: center;
+}
+
+.right-panel input {
+  border: 0;
+  background-color: var(--bg-color);
+  padding: 15px;
+  border-radius: 9px;
+}
+
+.right-panel label button {
+  border: 0px;
+  border-radius: 6px;
+  padding: 0.4em;
+  transition: 0.4s ease;
+}
+
+label button:hover {
+  filter: brightness(95%);
+}
+
+label button:active {
+  border: 1px solid;
+}
+
+#logo-name {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.hero-section {
+  background-image: linear-gradient(135deg, var(--gradient-1), var(--gradient-2));
+  width: 100%;
+  height: 450px;
+  margin-top: 90px;
+  padding: 40px;
+  border-radius: 8px;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  color: #fff;
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: flex-end;
+  background-attachment: fixed;
+}
+
+.hero-section .text {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0 120px;
+}

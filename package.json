@@ -9,18 +9,18 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
-    "deploy": "npm run build && gh-pages -d dist"
+    "format:check": "prettier --check ."
   },
   "dependencies": {
-    "date-fns": "^3.0.0"
+    "date-fns": "^3.0.0",
+    "lucide": "^0.563.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
     "css-loader": "^7.1.2",
+    "dotenv-webpack": "^8.1.1",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
-    "gh-pages": "^6.3.0",
     "globals": "^17.2.0",
     "html-loader": "^5.1.0",
     "html-webpack-plugin": "^5.6.6",

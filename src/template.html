@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Flow</title>
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/modern-normalize/3.0.1/modern-normalize.min.css"
+  />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@300..800&display=swap"
+    rel="stylesheet"
+  />
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <span id="logo"></span>
+            <span id="logo-name">WeatherFlow</span>
+        </div>
+        <div class="right-panel">
+            <input type="text" placeholder="e.g Las Vegas" id="search">
+            <label for="search"><button type="submit">Search</button></label>
+            <div class="toggle-temp">
+                <div class="temp-btn active">°C</div>
+                <div class="temp-btn">°F</div>
+            </div>
+        </div>
+    </header>
+    <section class="hero-section">
+      <div class="text">
+        <div class="rigth-text">
+          <div><span class="current-day-icon"></span> Today</div>
+          <div class="temp">72°C</div>
+          <div class="description">Sunny</div>
+          <div class="location"><span class="location-icon"></span>San Francisco, CA</div>
+        </div>
+        <div class="left-text">
+          <div class="weather" id="wind">
+            <span>Wind</span>
+            <span class="weather-value">12mph</span>
+          </div>
+
+          <div class="weather" id="humidity">
+            <span>Humidity</span>
+            <span class="weather-value">45%</span>
+          </div>
+  
+        <div class="weather" id="uv-index">
+          <span>UV index</span>
+          <span class="weather-value">6 High</span>
+        </div>
+  
+        <div class="weather" id="wind">
+          <span>Visibility</span>
+          <span class="weather-value">12mi</span>
+        </div>
+        </div>
+      </div>
+    </div>
+    </div>
+      </div>
+    </section>
+</body>
+</html>
