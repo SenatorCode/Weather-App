@@ -29,7 +29,11 @@ export default {
     new HtmlWebpackPlugin({
       template: "./src/template.html",
     }),
-    new DotenvWebpackPlugin(),
+    new DotenvWebpackPlugin({
+      path: "./.env.local",
+      safe: false,
+      systemvars: true,
+    }),
   ],
   devServer: {
     static: {
