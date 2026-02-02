@@ -1,465 +1,309 @@
-import { getIcon } from './icon.js';
-import { getWeatherImage } from './image.js';
+import { getWeatherImage } from "./image.js";
 
-/**
- * DOM Module - Handles all DOM manipulation for WeatherFlow app
- */
 class DOM {
-  // Cache DOM elements
-  static elements = {
-    // Header
-    searchInput: null,
-    searchBtn: null,
-    tempToggleBtns: null,
-    
-    // Hero Section
-    heroSection: null,
-    heroBackground: null,
-    currentTemp: null,
-    currentCondition: null,
-    currentLocation: null,
-    windSpeed: null,
-    humidity: null,
-    uvIndex: null,
-    visibility: null,
-    
-    // Forecast
-    forecastGrid: null,
-    forecastDate: null,
-    
-    // Info Cards
-    airQualityScore: null,
-    airQualityStatus: null,
-    airQualityProgress: null,
-    airQualityText: null,
-    sunrise: null,
-    sunset: null,
-    
-    // Loading
-    loadingOverlay: null,
-  };
-
-  /**
-   * Initialize DOM - cache all elements and attach event listeners
-   */
-  static init() {
-    this.cacheElements();
-    this.attachEventListeners();
+  constructor() {
+    this.loadingScreen = document.getElementById("loadingScreen");
+    this.searchInput = document.querySelector(".search-box input");
+    this.tempToggleOptions = document.querySelectorAll(".temp-option");
+    this.tempUnit = "C"; // Default is Celsius
+    this.emojiMap = this.createEmojiMap();
+    this.initEventListeners();
   }
 
-  /**
-   * Cache all DOM elements for quick access
-   */
-  static cacheElements() {
-    // Header
-    this.elements.searchInput = document.getElementById('searchInput');
-    this.elements.searchBtn = document.getElementById('searchBtn');
-    this.elements.tempToggleBtns = document.querySelectorAll('.temp-toggle__btn');
-    
-    // Hero Section
-    this.elements.heroSection = document.getElementById('heroSection');
-    this.elements.heroBackground = document.getElementById('heroBackground');
-    this.elements.currentTemp = document.getElementById('currentTemp');
-    this.elements.currentCondition = document.getElementById('currentCondition');
-    this.elements.currentLocation = document.getElementById('currentLocation');
-    this.elements.windSpeed = document.getElementById('windSpeed');
-    this.elements.humidity = document.getElementById('humidity');
-    this.elements.uvIndex = document.getElementById('uvIndex');
-    this.elements.visibility = document.getElementById('visibility');
-    
-    // Forecast
-    this.elements.forecastGrid = document.getElementById('forecastGrid');
-    this.elements.forecastDate = document.getElementById('forecastDate');
-    
-    // Info Cards
-    this.elements.airQualityScore = document.getElementById('airQualityScore');
-    this.elements.airQualityStatus = document.getElementById('airQualityStatus');
-    this.elements.airQualityProgress = document.getElementById('airQualityProgress');
-    this.elements.airQualityText = document.getElementById('airQualityText');
-    this.elements.sunrise = document.getElementById('sunrise');
-    this.elements.sunset = document.getElementById('sunset');
-    
-    // Loading
-    this.elements.loadingOverlay = document.getElementById('loadingOverlay');
+  createEmojiMap() {
+    return {
+      "clear-day": "☀️",
+      "clear-night": "🌙",
+      "partly-cloudy-day": "🌤️",
+      "partly-cloudy-night": "🌥️",
+      cloudy: "☁️",
+      overcast: "☁️",
+      rain: "🌧️",
+      drizzle: "🌦️",
+      snow: "❄️",
+      sleet: "🌨️",
+      thunderstorm: "⛈️",
+      storm: "⛈️",
+      hail: "🌨️",
+      fog: "🌫️",
+      mist: "🌫️",
+      wind: "💨",
+      windy: "💨",
+      breezy: "💨",
+      frost: "❄️",
+      freeze: "❄️",
+      freezing: "❄️",
+      blizzard: "🌨️",
+      dust: "🌪️",
+      hot: "🔥",
+      cold: "❄️",
+      humid: "💧",
+    };
   }
 
-  /**
-   * Attach event listeners
-   */
-  static attachEventListeners() {
-    // Search
-    this.elements.searchBtn.addEventListener('click', () => this.handleSearch());
-    this.elements.searchInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') this.handleSearch();
-    });
-    
-    // Temperature toggle
-    this.elements.tempToggleBtns.forEach(btn => {
-      btn.addEventListener('click', (e) => this.handleTempToggle(e));
-    });
-  }
-
-  /**
-   * Handle search functionality
-   */
-  static handleSearch() {
-    const location = this.elements.searchInput.value.trim();
-    if (location) {
-      // Dispatch custom event for main app to handle
-      const event = new CustomEvent('locationSearch', { detail: { location } });
-      document.dispatchEvent(event);
-      this.elements.searchInput.value = '';
-    }
-  }
-
-  /**
-   * Handle temperature unit toggle
-   */
-  static handleTempToggle(e) {
-    const unit = e.target.dataset.unit;
-    
-    // Update active button
-    this.elements.tempToggleBtns.forEach(btn => {
-      btn.classList.remove('active');
-      btn.setAttribute('aria-pressed', 'false');
-    });
-    e.target.classList.add('active');
-    e.target.setAttribute('aria-pressed', 'true');
-    
-    // Dispatch custom event for main app to handle
-    const event = new CustomEvent('tempUnitChange', { detail: { unit } });
-    document.dispatchEvent(event);
-  }
-
-  /**
-   * Show loading overlay
-   */
-  static showLoading() {
-    this.elements.loadingOverlay.classList.add('active');
-  }
-
-  /**
-   * Hide loading overlay
-   */
-  static hideLoading() {
-    this.elements.loadingOverlay.classList.remove('active');
-  }
-
-  /**
-   * Update current weather hero section
-   * @param {Object} currentData - Current weather data
-   * @param {string} location - Location name
-   */
-  static async updateCurrentWeather(currentData, location) {
-    const {
-      icon,
-      condition,
-      windSpeed,
-      humidity,
-      temp,
-      uvIndex,
-      visibility,
-      sunset,
-      sunrise
-    } = currentData;
-
-    // Update temperature
-    this.elements.currentTemp.textContent = `${Math.round(temp)}°C`;
-    
-    // Update condition
-    this.elements.currentCondition.textContent = condition;
-    
-    // Update location
-    this.elements.currentLocation.textContent = location;
-    
-    // Update weather details
-    this.elements.windSpeed.textContent = `${Math.round(windSpeed)} mph`;
-    this.elements.humidity.textContent = `${Math.round(humidity)}%`;
-    this.elements.uvIndex.textContent = this.getUVIndexLabel(uvIndex);
-    this.elements.visibility.textContent = `${Math.round(visibility)} mi`;
-    
-    // Update sunrise and sunset
-    this.elements.sunrise.textContent = this.formatTime(sunrise);
-    this.elements.sunset.textContent = this.formatTime(sunset);
-    
-    // Update hero icon
-    const IconComponent = await getIcon(icon);
-    this.updateHeroIcon(IconComponent, icon);
-    
-    // Update background image based on weather condition
-    try {
-      const imageData = await getWeatherImage(condition);
-      if (imageData.results && imageData.results.length > 0) {
-        const imageUrl = imageData.results[0].urls.regular;
-        this.elements.heroBackground.style.backgroundImage = `url('${imageUrl}')`;
+  initEventListeners() {
+    // Search functionality
+    this.searchInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        this.handleSearch();
       }
+    });
+
+    // Temperature toggle
+    this.tempToggleOptions.forEach((option) => {
+      option.addEventListener("click", (e) => {
+        this.tempToggleOptions.forEach((opt) => opt.classList.remove("active"));
+        e.target.classList.add("active");
+        this.tempUnit = e.target.textContent.trim();
+        // Re-render with new temperature unit
+        window.dispatchEvent(new Event("temperatureToggled"));
+      });
+    });
+  }
+
+  handleSearch() {
+    const location = this.searchInput.value.trim();
+    if (location) {
+      window.dispatchEvent(
+        new CustomEvent("searchLocation", { detail: { location } }),
+      );
+    }
+  }
+
+  showLoading() {
+    this.loadingScreen.classList.remove("hidden");
+  }
+
+  hideLoading() {
+    setTimeout(() => {
+      this.loadingScreen.classList.add("hidden");
+    }, 500);
+  }
+
+  convertTemp(celsius, toFahrenheit = true) {
+    if (toFahrenheit) {
+      return Math.round((celsius * 9) / 5 + 32);
+    }
+    return Math.round(celsius);
+  }
+
+  getTempDisplay(celsius) {
+    if (this.tempUnit === "°F") {
+      return this.convertTemp(celsius, true);
+    }
+    return this.convertTemp(celsius, false);
+  }
+
+  async updateHeroSection(currentData, location) {
+    const hero = document.querySelector(".hero");
+    const weatherStatus = document.querySelector(".weather-status");
+    const tempDisplay = document.querySelector(".temp-display");
+    const weatherDesc = document.querySelector(".weather-desc");
+    const locationDisplay = document.querySelector(".location");
+    const weatherDetailsDiv = document.querySelector(".weather-details");
+
+    try {
+      // Get icon emoji or Lucide component
+      const iconEmoji = this.emojiMap[currentData.icon] || "☀️";
+      weatherStatus.innerHTML = `<div class="weather-icon">${iconEmoji}</div>`;
+
+      // Update temperature and description
+      const displayTemp = this.getTempDisplay(currentData.temp);
+      tempDisplay.textContent = `${displayTemp}°${this.tempUnit}`;
+      weatherDesc.textContent = currentData.condition;
+      locationDisplay.textContent = `📍 ${location}`;
+
+      // Update weather details
+      const windSpeedDisplay =
+        currentData.windSpeed > 40
+          ? currentData.windSpeed
+          : Math.round(currentData.windSpeed * 2.237); // m/s to mph
+      weatherDetailsDiv.innerHTML = `
+        <div class="detail-item">
+          <div class="detail-label">Wind</div>
+          <div class="detail-value">${Math.round(windSpeedDisplay)} ${this.tempUnit === "°F" ? "mph" : "km/h"}</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-label">Humidity</div>
+          <div class="detail-value">${Math.round(currentData.humidity)}%</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-label">UV Index</div>
+          <div class="detail-value">${Math.round(currentData.uvIndex)} ${this.getUVLevel(currentData.uvIndex)}</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-label">Visibility</div>
+          <div class="detail-value">${Math.round(currentData.visibility)} ${this.tempUnit === "°F" ? "mi" : "km"}</div>
+        </div>
+      `;
+
+      // Update background image
+      await this.updateHeroBackground(currentData.condition);
+
+      // Update sunrise and sunset
+      this.updateSunriseSunset(currentData.sunrise, currentData.sunset);
     } catch (error) {
-      console.error('Error fetching background image:', error);
+      console.error("Error updating hero section:", error);
     }
   }
 
-  /**
-   * Update hero section icon
-   */
-  static updateHeroIcon(IconComponent, iconName) {
-    const iconContainer = document.querySelector('.hero__day-icon');
-    if (iconContainer && IconComponent) {
-      // Create SVG element from lucide icon
-      const svg = this.createIconSVG(IconComponent);
-      iconContainer.innerHTML = '';
-      iconContainer.appendChild(svg);
+  getUVLevel(uvIndex) {
+    if (uvIndex < 3) return "Low";
+    if (uvIndex < 6) return "Moderate";
+    if (uvIndex < 8) return "High";
+    if (uvIndex < 11) return "Very High";
+    return "Extreme";
+  }
+
+  async updateHeroBackground(weatherCondition) {
+    const gradients = {
+      clear:
+        "linear-gradient(135deg, rgba(30, 58, 138, 0.8) 0%, rgba(59, 130, 246, 0.6) 100%)",
+      cloudy:
+        "linear-gradient(135deg, rgba(51, 65, 85, 0.8) 0%, rgba(100, 116, 139, 0.6) 100%)",
+      rain: "linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(51, 65, 85, 0.7) 100%)",
+      snow: "linear-gradient(135deg, rgba(59, 130, 246, 0.85) 0%, rgba(148, 163, 184, 0.7) 100%)",
+      thunderstorm:
+        "linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.8) 100%)",
+    };
+
+    const weatherLower = weatherCondition.toLowerCase();
+    let gradientKey = "clear";
+
+    if (weatherLower.includes("cloud")) gradientKey = "cloudy";
+    else if (weatherLower.includes("rain") || weatherLower.includes("drizzle"))
+      gradientKey = "rain";
+    else if (weatherLower.includes("snow") || weatherLower.includes("sleet"))
+      gradientKey = "snow";
+    else if (weatherLower.includes("thunder") || weatherLower.includes("storm"))
+      gradientKey = "thunderstorm";
+
+    const gradient = gradients[gradientKey];
+
+    try {
+      const imageData = await getWeatherImage(weatherCondition);
+      const imageUrl =
+        imageData.results[0]?.urls?.regular ||
+        "https://images.unsplash.com/photo-1495341990814-a8fb08496019?w=1200&h=600&fit=crop";
+
+      const hero = document.querySelector(".hero");
+      hero.style.backgroundImage = `${gradient}, url('${imageUrl}')`;
+    } catch (error) {
+      console.error("Error fetching weather image:", error);
+      const hero = document.querySelector(".hero");
+      hero.style.backgroundImage = `${gradient}, url('https://images.unsplash.com/photo-1495341990814-a8fb08496019?w=1200&h=600&fit=crop')`;
     }
   }
 
-  /**
-   * Create SVG element from lucide icon component
-   */
-  static createIconSVG(IconComponent) {
-    const div = document.createElement('div');
-    div.innerHTML = IconComponent.toString();
-    return div.firstElementChild || document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  updateSunriseSunset(sunrise, sunset) {
+    const sunTimes = document.querySelector(".sunrise-sunset");
+    sunTimes.innerHTML = `
+      <div class="sun-time">
+        <div class="sun-icon-label">🌅</div>
+        <div class="sun-label">Sunrise</div>
+        <div class="sun-time-value">${this.formatTime(sunrise)}</div>
+      </div>
+      <div class="sun-time">
+        <div class="sun-icon-label">🌇</div>
+        <div class="sun-label">Sunset</div>
+        <div class="sun-time-value">${this.formatTime(sunset)}</div>
+      </div>
+    `;
   }
 
-  /**
-   * Update forecast cards
-   * @param {Array} forecastData - Array of forecast day objects
-   * @param {Array} dates - Array of formatted date strings
-   */
-  static async updateForecast(forecastData, dates) {
-    this.elements.forecastGrid.innerHTML = '';
-    
-    if (!Array.isArray(forecastData) || forecastData.length === 0) {
-      this.elements.forecastGrid.innerHTML = '<p>No forecast data available</p>';
-      return;
-    }
+  formatTime(timeString) {
+    if (!timeString) return "--:--";
+    const [hours, minutes] = timeString.split(":");
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? "PM" : "AM";
+    const displayHour = hour % 12 || 12;
+    return `${displayHour}:${minutes} ${ampm}`;
+  }
 
-    // Calculate date range
-    if (dates && dates.length > 0) {
-      const firstDate = dates[0];
-      const lastDate = dates[dates.length - 1];
-      const dateRange = `${firstDate} - ${lastDate}`;
-      this.elements.forecastDate.textContent = dateRange;
-    }
+  async updateForecast(forecastData) {
+    const forecastGrid = document.querySelector(".forecast-grid");
+    const dayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-    // Create forecast cards
-    for (let i = 0; i < Math.min(forecastData.length, 7); i++) {
-      const dayData = forecastData[i];
-      const date = dates && dates[i] ? dates[i] : `Day ${i + 1}`;
-      
-      const card = document.createElement('div');
-      card.className = 'forecast-card';
-      
+    forecastGrid.innerHTML = "";
+
+    for (let i = 0; i < forecastData.length && i < 7; i++) {
+      const day = forecastData[i];
+      const card = document.createElement("div");
+      card.className = "forecast-card";
+      card.style.animationDelay = `${0.5 + i * 0.1}s`;
+
       try {
-        const IconComponent = await getIcon(dayData.icon || 'cloudy');
-        
+        // Use emoji instead of Lucide
+        const iconEmoji = this.emojiMap[day.icon] || "☀️";
+        const tempDisplay = this.getTempDisplay(day.temp);
+        const minTempDisplay = this.getTempDisplay(day.tempmin || day.temp - 5);
+
         card.innerHTML = `
-          <div class="forecast-card__day">${this.formatDateShort(date)}</div>
-          <div class="forecast-card__icon" id="icon-${i}"></div>
-          <div class="forecast-card__temp">${Math.round(dayData.temp)}°</div>
-          <div class="forecast-card__low">${Math.round(dayData.tempmin || dayData.temp - 5)}°</div>
-          <div class="forecast-card__description">${dayData.conditions || 'Clear'}</div>
+          <div class="day-label">${dayLabels[i]}</div>
+          <div class="forecast-icon">${iconEmoji}</div>
+          <div class="forecast-temp">${tempDisplay}°</div>
+          <div class="forecast-low">${minTempDisplay}°</div>
+          <div class="forecast-condition">${day.conditions}</div>
         `;
-        
-        this.elements.forecastGrid.appendChild(card);
-        
-        // Add icon to card
-        const iconContainer = card.querySelector(`#icon-${i}`);
-        if (IconComponent) {
-          const svg = this.createIconSVG(IconComponent);
-          iconContainer.appendChild(svg);
-        }
+
+        forecastGrid.appendChild(card);
       } catch (error) {
         console.error(`Error updating forecast card ${i}:`, error);
       }
     }
   }
 
-  /**
-   * Update air quality information
-   * @param {number} aqi - Air Quality Index score
-   */
-  static updateAirQuality(aqi) {
-    const score = Math.round(aqi);
-    const status = this.getAQIStatus(score);
-    const percentage = Math.min((score / 500) * 100, 100);
-    
-    this.elements.airQualityScore.textContent = score;
-    this.elements.airQualityStatus.textContent = status;
-    this.elements.airQualityProgress.style.setProperty('--progress-width', `${percentage}%`);
-    
-    const statusText = this.getAQIDescription(score);
-    this.elements.airQualityText.textContent = statusText;
-  }
+  updateAirQuality(aqi) {
+    const aqiCard = document.querySelector(".aqi-value");
+    const aqiStatus = document.querySelector(".aqi-status");
+    const progressFill = document.querySelector(".progress-fill");
 
-  /**
-   * Get AQI status label based on score
-   */
-  static getAQIStatus(score) {
-    if (score <= 50) return 'Good';
-    if (score <= 100) return 'Moderate';
-    if (score <= 150) return 'Unhealthy for Sensitive Groups';
-    if (score <= 200) return 'Unhealthy';
-    if (score <= 300) return 'Very Unhealthy';
-    return 'Hazardous';
-  }
+    const value = Math.round(aqi);
+    aqiCard.textContent = value;
 
-  /**
-   * Get AQI description based on score
-   */
-  static getAQIDescription(score) {
-    if (score <= 50) return 'Air quality is satisfactory, and air pollution poses little or no risk.';
-    if (score <= 100) return 'Air quality is acceptable. However, there may be a risk for some people.';
-    if (score <= 150) return 'Members of sensitive groups may experience health effects.';
-    if (score <= 200) return 'Some members of the general public may begin to experience health effects.';
-    if (score <= 300) return 'Health alerts: The general public is more likely to be affected.';
-    return 'Health alert: The risk of health effects is increased for the entire population.';
-  }
+    let status = "Good";
+    let statusColor = "#10b981";
+    let fillWidth = 20;
 
-  /**
-   * Get UV Index label
-   */
-  static getUVIndexLabel(uvIndex) {
-    const rounded = Math.round(uvIndex);
-    let level = 'Low';
-    
-    if (rounded >= 3 && rounded < 6) level = 'Moderate';
-    if (rounded >= 6 && rounded < 8) level = 'High';
-    if (rounded >= 8 && rounded < 11) level = 'Very High';
-    if (rounded >= 11) level = 'Extreme';
-    
-    return `${rounded} ${level}`;
-  }
-
-  /**
-   * Format time string (HH:MM format)
-   */
-  static formatTime(timeString) {
-    if (!timeString) return '--:--';
-    
-    // Handle different time formats
-    if (timeString.includes(':')) {
-      return timeString.split(':').slice(0, 2).join(':');
+    if (value > 50 && value <= 100) {
+      status = "Moderate";
+      statusColor = "#f59e0b";
+      fillWidth = 40;
+    } else if (value > 100 && value <= 150) {
+      status = "Unhealthy for Sensitive Groups";
+      statusColor = "#f97316";
+      fillWidth = 60;
+    } else if (value > 150 && value <= 200) {
+      status = "Unhealthy";
+      statusColor = "#ef4444";
+      fillWidth = 75;
+    } else if (value > 200) {
+      status = "Very Unhealthy";
+      statusColor = "#991b1b";
+      fillWidth = 95;
     }
-    
-    return '--:--';
+
+    aqiStatus.textContent = status;
+    aqiStatus.style.color = statusColor;
+    progressFill.style.width = fillWidth + "%";
+    progressFill.style.background = `linear-gradient(90deg, ${statusColor}, #3b82f6)`;
   }
 
-  /**
-   * Format date to short format (MON, TUE, etc)
-   */
-  static formatDateShort(dateString) {
-    if (!dateString) return 'N/A';
-    
-    // Extract day of week if it exists (e.g., "Mon, 09, 12" -> "MON")
-    const parts = dateString.split(',');
-    if (parts.length > 0) {
-      return parts[0].toUpperCase().slice(0, 3);
-    }
-    
-    return dateString.slice(0, 3).toUpperCase();
+  updateDateRange() {
+    const today = new Date();
+    const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+    const options = { month: "short", day: "numeric" };
+    const startDate = today.toLocaleDateString("en-US", options);
+    const endDate = nextWeek.toLocaleDateString("en-US", options);
+
+    const dateRangeEl = document.querySelector(".date-range");
+    dateRangeEl.textContent = `${startDate} - ${endDate}`;
   }
 
-  /**
-   * Clear all weather data (reset to loading state)
-   */
-  static clearWeatherData() {
-    this.elements.currentTemp.textContent = '--°';
-    this.elements.currentCondition.textContent = '--';
-    this.elements.currentLocation.textContent = 'Loading...';
-    this.elements.windSpeed.textContent = '--';
-    this.elements.humidity.textContent = '--';
-    this.elements.uvIndex.textContent = '--';
-    this.elements.visibility.textContent = '--';
-    this.elements.sunrise.textContent = '--:--';
-    this.elements.sunset.textContent = '--:--';
-    this.elements.forecastGrid.innerHTML = '';
-    this.elements.airQualityScore.textContent = '--';
-    this.elements.airQualityStatus.textContent = '--';
-    this.elements.airQualityText.textContent = 'Loading...';
-  }
-
-  /**
-   * Display error message
-   */
-  static showError(message) {
-    // Create a simple error notification
-    const errorDiv = document.createElement('div');
-    errorDiv.className = 'error-notification';
-    errorDiv.style.cssText = `
-      position: fixed;
-      top: 100px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #EF4444;
-      color: white;
-      padding: 1rem 1.5rem;
-      border-radius: 0.75rem;
-      box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
-      z-index: 200;
-      animation: slideInDown 0.3s ease-out;
-    `;
-    errorDiv.textContent = message;
-    document.body.appendChild(errorDiv);
-    
-    // Auto-remove after 5 seconds
-    setTimeout(() => {
-      errorDiv.style.animation = 'slideOutUp 0.3s ease-out';
-      setTimeout(() => errorDiv.remove(), 300);
-    }, 5000);
-  }
-
-  /**
-   * Convert temperature between Celsius and Fahrenheit
-   */
-  static convertTemperature(celsius, toUnit) {
-    if (toUnit === 'F') {
-      return (celsius * 9/5) + 32;
-    }
-    return celsius;
-  }
-
-  /**
-   * Convert wind speed (mph to other units)
-   */
-  static convertWindSpeed(mph, toUnit) {
-    if (toUnit === 'kmh') {
-      return mph * 1.609;
-    }
-    if (toUnit === 'mps') {
-      return mph * 0.44704;
-    }
-    return mph;
-  }
-
-  /**
-   * Convert visibility (miles to kilometers)
-   */
-  static convertVisibility(miles, toUnit) {
-    if (toUnit === 'km') {
-      return miles * 1.609;
-    }
-    return miles;
-  }
-
-  /**
-   * Update all temperature values in the UI based on unit
-   */
-  static updateAllTemperatures(currentData, unit) {
-    if (unit === 'F') {
-      const fahrenheit = this.convertTemperature(currentData.temp, 'F');
-      this.elements.currentTemp.textContent = `${Math.round(fahrenheit)}°F`;
-    } else {
-      this.elements.currentTemp.textContent = `${Math.round(currentData.temp)}°C`;
-    }
-  }
-
-  /**
-   * Get current temperature unit from toggle
-   */
-  static getCurrentTempUnit() {
-    const activeBtn = document.querySelector('.temp-toggle__btn.active');
-    return activeBtn ? activeBtn.dataset.unit : 'C';
+  updateSearchInput(location) {
+    this.searchInput.value = location;
   }
 }
 
-export default DOM;
+export { DOM };

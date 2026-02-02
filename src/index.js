@@ -1,167 +1,152 @@
-import './styles.css';
-import DOM from './Dom.js';
-import { API } from './api.js';
+import "./styles.css";
+import { API } from "./api.js";
+import { DOM } from "./Dom.js";
 
-/**
- * WeatherFlow App - Main Controller
- */
 class WeatherApp {
   constructor() {
-    this.currentLocation = 'San Francisco';
-    this.currentTempUnit = 'C';
+    this.dom = new DOM();
+    this.currentLocation = "San Francisco";
     this.currentWeatherData = null;
     this.forecastData = [];
-    this.dateData = [];
     this.init();
   }
 
-  /**
-   * Initialize the app
-   */
   async init() {
+    this.dom.showLoading();
+    this.dom.updateDateRange();
+
     try {
-      // Initialize DOM module
-      DOM.init();
-      
-      // Set up event listeners
-      this.setupEventListeners();
-      
-      // Load initial weather data
       await this.loadWeather(this.currentLocation);
     } catch (error) {
-      console.error('App initialization error:', error);
-      DOM.showError('Failed to initialize app. Please try again.');
+      console.error("Error initializing app:", error);
+      this.dom.hideLoading();
+      this.showError("Failed to load weather data. Please try again.");
     }
-  }
 
-  /**
-   * Setup custom event listeners
-   */
-  setupEventListeners() {
-    // Location search
-    document.addEventListener('locationSearch', (e) => {
-      this.currentLocation = e.detail.location;
-      this.loadWeather(this.currentLocation);
+    // Event listeners
+    window.addEventListener("searchLocation", (e) => {
+      this.handleSearch(e.detail.location);
     });
-    
-    // Temperature unit change
-    document.addEventListener('tempUnitChange', (e) => {
-      this.currentTempUnit = e.detail.unit;
-      this.updateUIWithUnitChange();
+
+    window.addEventListener("temperatureToggled", () => {
+      this.refreshDisplay();
     });
   }
 
-  /**
-   * Load weather data for a location
-   */
   async loadWeather(location) {
     try {
-      DOM.showLoading();
-      DOM.clearWeatherData();
-      
-      // Fetch current weather
+      // Show loading state
+      this.dom.showLoading();
+
+      // Fetch current weather data
       const currentData = await API.getCurrentDayData(location);
       this.currentWeatherData = currentData;
-      
-      // Update hero section with current weather
-      await DOM.updateCurrentWeather(currentData, location);
-      
+
       // Fetch 7-day forecast
       await API.create(location);
-      
-      // Get forecast data
-      const temps = API.getTemp();
-      const icons = API.getIcon();
-      const descriptions = API.getDescription();
-      const dates = API.getDate();
-      
-      this.forecastData = temps.map((temp, index) => ({
-        temp: temp,
-        icon: icons[index] || 'cloudy',
-        conditions: descriptions[index] || 'Clear',
-        tempmin: temp - 5, // Estimate low temp
-      }));
-      
-      this.dateData = dates;
-      
-      // Update forecast section
-      await DOM.updateForecast(this.forecastData, this.dateData);
-      
-      // Update air quality (placeholder - integrate with your AQI data source)
-      this.updateAirQuality();
-      
-      // Hide loading
-      DOM.hideLoading();
+      this.extractForecastData();
+
+      // Update UI
+      await this.dom.updateHeroSection(currentData, location);
+      await this.dom.updateForecast(this.forecastData);
+
+      // Update air quality
+      const aqiValue = this.calculateAQI(currentData);
+      this.dom.updateAirQuality(aqiValue);
+
+      // Update location
+      this.currentLocation = location;
+      this.dom.updateSearchInput(location);
+
+      // Hide loading state
+      this.dom.hideLoading();
     } catch (error) {
-      console.error('Error loading weather:', error);
-      DOM.hideLoading();
-      DOM.showError(`Unable to load weather for "${location}". Please try another location.`);
+      console.error("Error loading weather:", error);
+      this.dom.hideLoading();
+      this.showError("Could not find location. Please try another search.");
     }
   }
 
-  /**
-   * Update UI when temperature unit changes
-   */
-  updateUIWithUnitChange() {
-    if (!this.currentWeatherData) return;
-    
-    if (this.currentTempUnit === 'F') {
-      const fahrenheit = DOM.convertTemperature(this.currentWeatherData.temp, 'F');
-      DOM.elements.currentTemp.textContent = `${Math.round(fahrenheit)}°F`;
-      
-      // Update wind speed if needed
-      const windMph = this.currentWeatherData.windSpeed;
-      DOM.elements.windSpeed.textContent = `${Math.round(windMph)} mph`;
-    } else {
-      DOM.elements.currentTemp.textContent = `${Math.round(this.currentWeatherData.temp)}°C`;
-      DOM.elements.windSpeed.textContent = `${Math.round(this.currentWeatherData.windSpeed)} mph`;
+  extractForecastData() {
+    // Get all the data from static getters
+    const temps = API.getTemp();
+    const icons = API.getIcon();
+    const descriptions = API.getDescription();
+    const dates = API.getDate();
+
+    this.forecastData = temps.map((temp, index) => ({
+      temp: temp,
+      icon: icons[index] || "cloudy",
+      conditions: descriptions[index] || "Forecast",
+      date: dates[index] || "",
+      tempmin: temp - 5, // Fallback minimum temperature
+    }));
+  }
+
+  calculateAQI(weatherData) {
+    // Simple AQI calculation based on weather conditions
+    let aqiScore = 50;
+
+    if (weatherData.humidity > 80) aqiScore += 10;
+    if (weatherData.humidity > 90) aqiScore += 10;
+
+    if (weatherData.visibility < 5) aqiScore += 30;
+    if (weatherData.visibility < 3) aqiScore += 20;
+
+    const condition = weatherData.condition.toLowerCase();
+    if (condition.includes("dust")) aqiScore += 40;
+    if (condition.includes("smoke")) aqiScore += 35;
+    if (condition.includes("fog")) aqiScore += 15;
+
+    return Math.min(aqiScore, 500); // Cap at 500
+  }
+
+  async handleSearch(location) {
+    if (location && location !== this.currentLocation) {
+      await this.loadWeather(location);
     }
   }
 
-  /**
-   * Update air quality information
-   * Calculate based on current conditions or integrate with AQI API
-   */
-  updateAirQuality() {
-    // Placeholder AQI calculation based on visibility and humidity
-    // In production, integrate with a real AQI API
-    let aqi = 50;
-    
+  refreshDisplay() {
+    // Refresh UI with the current data and new temperature unit
     if (this.currentWeatherData) {
-      const visibility = this.currentWeatherData.visibility;
-      const humidity = this.currentWeatherData.humidity;
-      
-      // Simple AQI estimation
-      if (visibility < 5) aqi = 150;
-      else if (visibility < 10) aqi = 100;
-      else if (humidity > 80) aqi = 75;
-      else aqi = 42; // Good air quality
+      this.dom.updateHeroSection(this.currentWeatherData, this.currentLocation);
+      this.dom.updateForecast(this.forecastData);
     }
-    
-    DOM.updateAirQuality(aqi);
   }
 
-  /**
-   * Handle location search
-   */
-  async searchLocation(location) {
-    if (!location || location.trim() === '') {
-      DOM.showError('Please enter a location');
-      return;
-    }
-    
-    this.currentLocation = location;
-    await this.loadWeather(location);
+  showError(message) {
+    const container = document.querySelector(".container");
+    const errorDiv = document.createElement("div");
+    errorDiv.style.cssText = `
+      background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+      border: 2px solid #ef4444;
+      color: #991b1b;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      animation: slideDown 0.3s ease-out;
+      font-weight: 600;
+    `;
+    errorDiv.textContent = message;
+
+    container.insertBefore(errorDiv, container.firstChild);
+
+    setTimeout(() => {
+      errorDiv.style.animation = "slideUp 0.3s ease-out";
+      setTimeout(() => errorDiv.remove(), 300);
+    }, 4000);
   }
 }
 
-// Initialize app when DOM is ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    window.weatherApp = new WeatherApp();
+// Initialize the app when DOM is ready
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", () => {
+    new WeatherApp();
   });
 } else {
-  window.weatherApp = new WeatherApp();
+  new WeatherApp();
 }
 
-export default WeatherApp;
+// Export for use in other modules if needed
+export { WeatherApp };
