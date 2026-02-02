@@ -3,66 +3,192 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Weather Flow</title>
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/modern-normalize/3.0.1/modern-normalize.min.css"
-  />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@300..800&display=swap"
-    rel="stylesheet"
-  />
+    <title>WeatherFlow - Your Weather, Perfectly Visualized</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/modern-normalize/3.0.1/modern-normalize.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
-    <header>
-        <div class="logo">
-            <span id="logo"></span>
-            <span id="logo-name">WeatherFlow</span>
-        </div>
-        <div class="right-panel">
-            <input type="text" placeholder="e.g Las Vegas" id="search">
-            <label for="search"><button type="submit">Search</button></label>
-            <div class="toggle-temp">
-                <div class="temp-btn active">°C</div>
-                <div class="temp-btn">°F</div>
+    <!-- Header Navigation -->
+    <header class="header">
+        <div class="header__container">
+            <div class="header__logo">
+                <svg class="logo-icon" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+                <span class="logo-text">WeatherFlow</span>
+            </div>
+
+            <div class="header__controls">
+                <div class="search-box">
+                    <input 
+                        type="text" 
+                        id="searchInput" 
+                        class="search-input" 
+                        placeholder="Search location..."
+                        aria-label="Search weather location"
+                    />
+                    <button class="search-btn" id="searchBtn" aria-label="Search">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.35-4.35"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="temp-toggle" role="group" aria-label="Temperature unit">
+                    <button class="temp-toggle__btn active" data-unit="C" aria-pressed="true">°C</button>
+                    <button class="temp-toggle__btn" data-unit="F" aria-pressed="false">°F</button>
+                </div>
             </div>
         </div>
     </header>
-    <section class="hero-section">
-      <div class="text">
-        <div class="rigth-text">
-          <div><span class="current-day-icon"></span> Today</div>
-          <div class="temp">72°C</div>
-          <div class="description">Sunny</div>
-          <div class="location"><span class="location-icon"></span>San Francisco, CA</div>
-        </div>
-        <div class="left-text">
-          <div class="weather" id="wind">
-            <span>Wind</span>
-            <span class="weather-value">12mph</span>
-          </div>
 
-          <div class="weather" id="humidity">
-            <span>Humidity</span>
-            <span class="weather-value">45%</span>
-          </div>
-  
-        <div class="weather" id="uv-index">
-          <span>UV index</span>
-          <span class="weather-value">6 High</span>
-        </div>
-  
-        <div class="weather" id="wind">
-          <span>Visibility</span>
-          <span class="weather-value">12mi</span>
-        </div>
-        </div>
-      </div>
+    <!-- Main Content -->
+    <main class="main">
+        <!-- Current Weather Hero Section -->
+        <section class="hero" id="heroSection">
+            <div class="hero__content">
+                <div class="hero__left">
+                    <div class="hero__day">
+                        <span class="hero__day-icon"></span>
+                        <span>Today</span>
+                    </div>
+                    <div class="hero__temp" id="currentTemp">--°</div>
+                    <div class="hero__description" id="currentCondition">--</div>
+                    <div class="hero__location">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                            <circle cx="12" cy="10" r="3"></circle>
+                        </svg>
+                        <span id="currentLocation">Loading...</span>
+                    </div>
+                </div>
+
+                <div class="hero__right">
+                    <div class="weather-grid">
+                        <div class="weather-card">
+                            <div class="weather-card__label">Wind</div>
+                            <div class="weather-card__value" id="windSpeed">--</div>
+                        </div>
+                        <div class="weather-card">
+                            <div class="weather-card__label">Humidity</div>
+                            <div class="weather-card__value" id="humidity">--</div>
+                        </div>
+                        <div class="weather-card">
+                            <div class="weather-card__label">UV Index</div>
+                            <div class="weather-card__value" id="uvIndex">--</div>
+                        </div>
+                        <div class="weather-card">
+                            <div class="weather-card__label">Visibility</div>
+                            <div class="weather-card__value" id="visibility">--</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Background Image Container -->
+            <div class="hero__background" id="heroBackground"></div>
+        </section>
+
+        <!-- 7-Day Forecast Section -->
+        <section class="forecast-section" id="forecastSection">
+            <div class="forecast-header">
+                <h2 class="forecast-title">7-Day Forecast</h2>
+                <span class="forecast-date" id="forecastDate">Sept 12 - 18</span>
+            </div>
+
+            <div class="forecast-grid" id="forecastGrid">
+                <!-- Populated by DOM script -->
+            </div>
+        </section>
+
+        <!-- Additional Info Section -->
+        <section class="info-section">
+            <div class="info-grid">
+                <!-- Air Quality -->
+                <div class="info-card" id="airQualityCard">
+                    <div class="info-card__header">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Z"></path>
+                            <path d="M12 2a10 10 0 0 1 10 10"></path>
+                        </svg>
+                        <h3>Air Quality Index</h3>
+                    </div>
+                    <div class="air-quality">
+                        <div class="air-quality__score" id="airQualityScore">--</div>
+                        <div class="air-quality__status" id="airQualityStatus">--</div>
+                        <div class="air-quality__bar">
+                            <div class="air-quality__progress" id="airQualityProgress"></div>
+                        </div>
+                        <p class="air-quality__text" id="airQualityText">Loading...</p>
+                    </div>
+                </div>
+
+                <!-- Sunrise & Sunset -->
+                <div class="info-card">
+                    <div class="info-card__header">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="5"></circle>
+                            <line x1="12" y1="1" x2="12" y2="3"></line>
+                            <line x1="12" y1="21" x2="12" y2="23"></line>
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                            <line x1="1" y1="12" x2="3" y2="12"></line>
+                            <line x1="21" y1="12" x2="23" y2="12"></line>
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                        </svg>
+                        <h3>Sunrise & Sunset</h3>
+                    </div>
+                    <div class="sunrise-sunset">
+                        <div class="sunrise-sunset__item">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                                <circle cx="12" cy="12" r="5"></circle>
+                                <line x1="12" y1="1" x2="12" y2="3"></line>
+                                <line x1="12" y1="21" x2="12" y2="23"></line>
+                                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                                <line x1="1" y1="12" x2="3" y2="12"></line>
+                                <line x1="21" y1="12" x2="23" y2="12"></line>
+                                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                            </svg>
+                            <div>
+                                <p class="sunrise-sunset__label">Sunrise</p>
+                                <p class="sunrise-sunset__time" id="sunrise">--:--</p>
+                            </div>
+                        </div>
+                        <div class="sunrise-sunset__item">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                            </svg>
+                            <div>
+                                <p class="sunrise-sunset__label">Sunset</p>
+                                <p class="sunrise-sunset__time" id="sunset">--:--</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Loading State -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
     </div>
-    </div>
-      </div>
-    </section>
+
+    <script type="module" src="./index.js"></script>
 </body>
 </html>
